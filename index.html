@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>成語填字挑戰</title>
+<style>
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:"Noto Serif TC","PingFang TC","Microsoft JhengHei",serif;
+    color:#332820;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(120,90,50,.045) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 70% 60%, rgba(120,90,50,.035) 0 1px, transparent 1.5px),
+      #f5edda;
+    background-size:18px 18px,23px 23px,auto;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:24px;
+  }
+  .app{
+    width:min(760px,100%);
+    background:rgba(255,251,240,.92);
+    border:1px solid rgba(111,73,43,.22);
+    box-shadow:0 12px 35px rgba(70,45,25,.12);
+    border-radius:18px;
+    overflow:hidden;
+  }
+  header{
+    padding:28px 30px 18px;
+    text-align:center;
+    border-bottom:1px solid rgba(111,73,43,.15);
+  }
+  .seal{
+    display:inline-flex;
+    width:58px;height:58px;
+    align-items:center;justify-content:center;
+    border:3px solid #9d3028;
+    color:#9d3028;
+    font-weight:800;
+    font-size:20px;
+    line-height:1.05;
+    transform:rotate(-5deg);
+    border-radius:7px;
+    margin-bottom:10px;
+  }
+  h1{margin:0;color:#8f2d26;font-size:clamp(28px,6vw,42px);letter-spacing:.08em}
+  .subtitle{margin:10px 0 0;font-size:16px;color:#665247}
+  main{padding:30px}
+  .screen{display:none}
+  .screen.active{display:block}
+  .center{text-align:center}
+  .start-icon{font-size:42px;margin-bottom:8px}
+  .start-text{font-size:20px;line-height:1.8;margin:12px 0 20px}
+  .rules{
+    margin:0 auto 28px;
+    max-width:430px;
+    padding:18px 20px;
+    background:#fbf4e3;
+    border-left:4px solid #a2352d;
+    text-align:left;
+    line-height:1.9;
+    border-radius:8px;
+  }
+  button{
+    border:0;
+    background:#96342c;
+    color:#fffaf0;
+    padding:13px 28px;
+    border-radius:9px;
+    font-family:inherit;
+    font-size:17px;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(110,45,35,.18);
+    transition:.15s;
+  }
+  button:hover{background:#7f2923;transform:translateY(-1px)}
+  button:disabled{opacity:.55;cursor:not-allowed;transform:none}
+  .game-top{
+    display:flex;justify-content:space-between;gap:15px;
+    font-size:17px;font-weight:700;margin-bottom:10px;
+  }
+  .progress{
+    height:10px;background:#e4d7bf;border-radius:99px;overflow:hidden;margin-bottom:28px;
+  }
+  .progress-bar{height:100%;width:0;background:#a2352d;transition:width .25s}
+  .question-card{
+    text-align:center;
+    padding:25px 15px 30px;
+  }
+  .question-label{color:#8a6b57;font-size:15px;margin-bottom:14px}
+  .idiom{
+    font-size:clamp(34px,9vw,58px);
+    letter-spacing:.12em;
+    font-weight:800;
+    color:#2f2924;
+    margin-bottom:25px;
+  }
+  input{
+    width:95px;height:70px;
+    text-align:center;
+    font-family:inherit;
+    font-size:36px;
+    border:2px solid #b99b78;
+    border-radius:10px;
+    background:#fffdf7;
+    color:#302821;
+    outline:none;
+  }
+  input:focus{border-color:#96342c;box-shadow:0 0 0 3px rgba(150,52,44,.1)}
+  .input-wrap{margin-bottom:18px}
+  .feedback{
+    margin-top:25px;
+    padding:20px;
+    border-radius:10px;
+    background:#faf1df;
+    text-align:center;
+    line-height:1.8;
+  }
+  .feedback.correct{border:1px solid #b89b67}
+  .feedback.wrong{border:1px solid #c9a49d}
+  .feedback-title{font-size:21px;font-weight:800;color:#96342c}
+  .complete-idiom{font-size:28px;font-weight:800;margin:7px 0}
+  .meaning{color:#625249}
+  .next{margin-top:14px}
+  .result-score{font-size:64px;font-weight:900;color:#96342c;margin:10px 0 0}
+  .rank{font-size:34px;font-weight:900;margin:3px 0 12px;color:#3e3028}
+  .result-msg{font-size:18px;line-height:1.8;color:#665247;margin-bottom:25px}
+  .small-note{margin-top:18px;color:#8a7567;font-size:14px}
+  @media(max-width:520px){
+    body{padding:12px}
+    header{padding:22px 18px 15px}
+    main{padding:22px 18px}
+    .idiom{letter-spacing:.06em}
+    .game-top{font-size:15px}
+    button{width:100%}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="seal">成<br>語</div>
+    <h1>成語填字挑戰</h1>
+    <p class="subtitle">宣紙 × 印章・成語小試身手</p>
+  </header>
+
+  <main>
+    <section id="startScreen" class="screen active center">
+      <div class="start-icon">🏮</div>
+      <div class="start-text">挑戰 10 題成語，看看你能不能高中狀元！</div>
+      <div class="rules">
+        <div>✦ 每答對一題 <strong>+10 分</strong></div>
+        <div>✦ 共 <strong>10 題</strong></div>
+        <div>✦ 請輸入正確的單一漢字</div>
+        <div>✦ 同音字不算正確答案</div>
+      </div>
+      <button id="startBtn">開始挑戰</button>
+    </section>
+
+    <section id="gameScreen" class="screen">
+      <div class="game-top">
+        <span id="questionCount">第 1 / 10 題</span>
+        <span id="score">⭐ 0 分</span>
+      </div>
+      <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
+
+      <div class="question-card">
+        <div class="question-label">請填入缺少的字</div>
+        <div id="idiomDisplay" class="idiom">畫龍點□</div>
+
+        <div class="input-wrap">
+          <input id="answerInput" type="text" maxlength="2" autocomplete="off" aria-label="答案">
+        </div>
+        <button id="submitBtn">確認答案</button>
+
+        <div id="feedback" class="feedback" style="display:none"></div>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen center">
+      <div class="start-icon">🏮</div>
+      <h2 style="font-size:30px;margin:0;color:#8f2d26">成績揭曉</h2>
+      <div id="finalScore" class="result-score">100 分</div>
+      <div id="rank" class="rank">狀元</div>
+      <div id="resultDetail" class="result-msg">答對 10 / 10 題<br>恭喜你金榜題名！</div>
+      <button id="restartBtn">再挑戰一次</button>
+      <div class="small-note">每次挑戰都會從題庫隨機抽出 10 題。</div>
+    </section>
+  </main>
+</div>
+
+<script>
+const questionBank = [
+  {idiom:"畫龍點睛", display:"畫龍點□", answer:"睛", meaning:"比喻做事抓住關鍵，使整體更加生動。"},
+  {idiom:"守株待兔", display:"守株待□", answer:"兔", meaning:"比喻只想等待機會，不主動努力。"},
+  {idiom:"一鳴驚人", display:"一□驚人", answer:"鳴", meaning:"比喻平時默默無聞，一出現就有驚人的表現。"},
+  {idiom:"亡羊補牢", display:"亡羊補□", answer:"牢", meaning:"比喻出了問題後及時補救，還不算晚。"},
+  {idiom:"掩耳盜鈴", display:"掩□盜鈴", answer:"耳", meaning:"比喻自己欺騙自己，以為別人也不知道。"},
+  {idiom:"杯弓蛇影", display:"杯弓□影", answer:"蛇", meaning:"比喻因疑神疑鬼而自己嚇自己。"},
+  {idiom:"刻舟求劍", display:"刻舟求□", answer:"劍", meaning:"比喻拘泥成法，不知隨情況改變。"},
+  {idiom:"狐假虎威", display:"狐假□威", answer:"虎", meaning:"比喻依仗別人的威勢來欺壓他人。"},
+  {idiom:"井然有序", display:"井然有□", answer:"序", meaning:"形容整齊有條理，秩序分明。"},
+  {idiom:"走馬看花", display:"走馬看□", answer:"花", meaning:"比喻觀察不仔細，只粗略地看過。"},
+  {idiom:"自相矛盾", display:"自相□盾", answer:"矛", meaning:"比喻自己的說法或行為互相衝突。"},
+  {idiom:"雪中送炭", display:"雪中送□", answer:"炭", meaning:"比喻在別人最需要時給予幫助。"},
+  {idiom:"滄海一粟", display:"滄海一□", answer:"粟", meaning:"比喻非常渺小，微不足道。"},
+  {idiom:"完璧歸趙", display:"完璧歸□", answer:"趙", meaning:"比喻原物完整地歸還主人。"},
+  {idiom:"四面楚歌", display:"四面□歌", answer:"楚", meaning:"比喻陷入四面受敵、孤立無援的困境。"},
+  {idiom:"螳螂捕蟬", display:"螳螂捕□", answer:"蟬", meaning:"比喻只注意眼前利益，卻沒察覺後方的危險。"},
+  {idiom:"塞翁失馬", display:"塞翁失□", answer:"馬", meaning:"比喻壞事有時也可能轉變成好事。"},
+  {idiom:"盲人摸象", display:"盲人摸□", answer:"象", meaning:"比喻只看到事物的一部分，不能了解全貌。"},
+  {idiom:"對牛彈琴", display:"對□彈琴", answer:"牛", meaning:"比喻對不懂的人講深奧的道理，白費力氣。"},
+  {idiom:"南轅北轍", display:"南轅北□", answer:"轍", meaning:"比喻行動與目的相反，越做離目標越遠。"},
+  {idiom:"守口如瓶", display:"守口如□", answer:"瓶", meaning:"形容嘴巴很緊，嚴守秘密。"},
+  {idiom:"畫蛇添足", display:"畫蛇添□", answer:"足", meaning:"比喻做了多餘的事，反而弄巧成拙。"},
+  {idiom:"杯水車薪", display:"杯水車□", answer:"薪", meaning:"比喻力量太小，解決不了大的問題。"},
+  {idiom:"愚公移山", display:"愚公移□", answer:"山", meaning:"比喻有毅力、有恆心地做一件事。"},
+  {idiom:"精衛填海", display:"精衛填□", answer:"海", meaning:"比喻意志堅定，不怕困難。"},
+  {idiom:"狼狽為奸", display:"狼狽為□", answer:"奸", meaning:"比喻壞人互相勾結一起做壞事。"},
+  {idiom:"水落石出", display:"水落石□", answer:"出", meaning:"比喻事情真相終於顯露。"},
+  {idiom:"一針見血", display:"一針見□", answer:"血", meaning:"比喻說話直接而切中要害。"},
+  {idiom:"一視同仁", display:"一視同□", answer:"仁", meaning:"對不同的人一樣看待，不分親疏。"},
+  {idiom:"迫不及待", display:"迫不及□", answer:"待", meaning:"形容心情非常急切，等不及了。"}
+];
+
+let gameQuestions = [];
+let currentIndex = 0;
+let score = 0;
+let answeredCount = 0;
+
+const startScreen = document.getElementById("startScreen");
+const gameScreen = document.getElementById("gameScreen");
+const resultScreen = document.getElementById("resultScreen");
+const questionCount = document.getElementById("questionCount");
+const scoreEl = document.getElementById("score");
+const progressBar = document.getElementById("progressBar");
+const idiomDisplay = document.getElementById("idiomDisplay");
+const answerInput = document.getElementById("answerInput");
+const submitBtn = document.getElementById("submitBtn");
+const feedback = document.getElementById("feedback");
+
+function shuffle(array){
+  const copy = [...array];
+  for(let i=copy.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [copy[i],copy[j]] = [copy[j],copy[i]];
+  }
+  return copy;
+}
+
+function showScreen(screen){
+  [startScreen, gameScreen, resultScreen].forEach(s=>s.classList.remove("active"));
+  screen.classList.add("active");
+}
+
+function startGame(){
+  score = 0;
+  currentIndex = 0;
+  answeredCount = 0;
+  gameQuestions = shuffle(questionBank).slice(0,10);
+  showScreen(gameScreen);
+  loadQuestion();
+}
+
+function loadQuestion(){
+  const q = gameQuestions[currentIndex];
+  questionCount.textContent = `第 ${currentIndex+1} / 10 題`;
+  scoreEl.textContent = `⭐ ${score} 分`;
+  progressBar.style.width = `${currentIndex * 10}%`;
+  idiomDisplay.textContent = q.display;
+
+  answerInput.value = "";
+  answerInput.disabled = false;
+  submitBtn.disabled = false;
+  feedback.style.display = "none";
+  feedback.className = "feedback";
+  answerInput.focus();
+}
+
+function submitAnswer(){
+  if(answerInput.disabled) return;
+
+  const userAnswer = answerInput.value.trim();
+
+  if(!userAnswer){
+    alert("請輸入答案");
+    answerInput.focus();
+    return;
+  }
+  if([...userAnswer].length !== 1){
+    alert("請輸入一個字");
+    answerInput.focus();
+    return;
+  }
+
+  const q = gameQuestions[currentIndex];
+  const isCorrect = userAnswer === q.answer;
+  answeredCount++;
+
+  answerInput.disabled = true;
+  submitBtn.disabled = true;
+
+  if(isCorrect){
+    score += 10;
+    scoreEl.textContent = `⭐ ${score} 分`;
+    feedback.className = "feedback correct";
+    feedback.innerHTML = `
+      <div class="feedback-title">✓ 答對了！ +10 分</div>
+      <div class="complete-idiom">${q.idiom}</div>
+      <button class="next">下一題</button>
+    `;
+  }else{
+    feedback.className = "feedback wrong";
+    feedback.innerHTML = `
+      <div class="feedback-title">✕ 答錯了</div>
+      <div>正確答案：<strong>${q.answer}</strong></div>
+      <div class="complete-idiom">${q.idiom}</div>
+      <div class="meaning">${q.meaning}</div>
+      <button class="next">下一題</button>
+    `;
+  }
+
+  feedback.style.display = "block";
+  progressBar.style.width = `${answeredCount * 10}%`;
+  feedback.querySelector(".next").addEventListener("click", nextQuestion);
+}
+
+function nextQuestion(){
+  if(currentIndex < 9){
+    currentIndex++;
+    loadQuestion();
+  }else{
+    showResult();
+  }
+}
+
+function showResult(){
+  const correct = score / 10;
+  let rank, message;
+
+  if(score === 100){
+    rank = "狀元";
+    message = "恭喜你金榜題名！";
+  }else if(score === 90){
+    rank = "榜眼";
+    message = "表現出色，距離狀元只差一步！";
+  }else if(score === 80){
+    rank = "探花";
+    message = "恭喜高中探花！";
+  }else{
+    rank = "落榜";
+    message = "別灰心，再挑戰一次吧！";
+  }
+
+  document.getElementById("finalScore").textContent = `${score} 分`;
+  document.getElementById("rank").textContent = rank;
+  document.getElementById("resultDetail").innerHTML =
+    `答對 ${correct} / 10 題<br>${message}`;
+
+  showScreen(resultScreen);
+}
+
+document.getElementById("startBtn").addEventListener("click", startGame);
+document.getElementById("restartBtn").addEventListener("click", startGame);
+submitBtn.addEventListener("click", submitAnswer);
+answerInput.addEventListener("keydown", e=>{
+  if(e.key === "Enter") submitAnswer();
+});
+</script>
+</body>
+</html>
